@@ -1,0 +1,85 @@
+name: CI/CD Pipeline with Email Alert
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Validate HTML
+        run: |
+          if [ -f "index.html" ]; then
+            echo "✅ index.html found!"
+          else
+            echo "❌ index.html NOT found!"
+            exit 1
+          fi
+
+      - name: Send failure email
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "❌ CI FAILED - web_task!"
+          to: kodeeshwaran07@gmail.com
+          from: kodeeshwaran07@gmail.com
+          body: |
+            ❌ ALERT: Pipeline FAILED!
+            Branch: ${{ github.ref }}
+            Commit: ${{ github.sha }}
+            By: ${{ github.actor }}
+            Fix here: https://github.com/kodeeshwaran07/web_task/actions
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy
+        run: echo "✅ Deployed successfully!"
+
+      - name: Send success email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "✅ SUCCESS - web_task Deployed!"
+          to: kodeeshwaran07@gmail.com
+          from: kodeeshwaran07@gmail.com
+          body: |
+            ✅ SUCCESS: Code deployed!
+            Branch: ${{ github.ref }}
+            By: ${{ github.actor }}
+            Live: https://kodeeshwaran07.github.io/web_task
+
+      - name: Send deploy failure email
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "❌ DEPLOY FAILED - web_task!"
+          to: kodeeshwaran07@gmail.com
+          from: kodeeshwaran07@gmail.com
+          body: |
+            ❌ ALERT: Deployment FAILED!
+            Branch: ${{ github.ref }}
+            By: ${{ github.actor }}
+            Check: https://github.com/kodeeshwaran07/web_task/actions
