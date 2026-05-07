@@ -18,7 +18,7 @@ jobs:
           if [ -f "index.html" ]; then
             echo "✅ index.html found!"
           else
-            echo "❌ index.html NOT found!"
+            eccho "❌ index.html NOT found!"
             exit 1
           fi
 
